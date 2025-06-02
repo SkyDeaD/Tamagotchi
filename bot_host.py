@@ -9,7 +9,9 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from aiohttp import web
 
 # Замените на токен вашего бота
-BOT_TOKEN = "7952226617:AAFJqQGTgC3W8KIaVBhRHFdWfOnQvhAjvSY"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN не найден в переменных окружения!")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
