@@ -388,6 +388,7 @@ if __name__ == "__main__":
       ├── pets_data.json       # Файл данных питомцев
       └── cities_game_data.json # Файл данных игры в города
      ```
+     Если файлов `pets_data.json` и `cities_game_data.json` - они создадутся автоматически при первом запуске бота.
    - Запустите:
      ```bash
      python bot.py
