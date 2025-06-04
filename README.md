@@ -382,9 +382,9 @@ if __name__ == "__main__":
      project_name/
       ├── bot.py               # Основной файл бота
       ├── data/
-      │   ├── cities.py        # Список городов
-      │   ├── debates.py       # Абсурдные дебаты
-      │   └── pet_phrases.py   # Фразы питомцев
+      │    ├── cities.py        # Список городов
+      │    ├── debates.py       # Абсурдные дебаты
+      │    └── pet_phrases.py   # Фразы питомцев
       ├── pets_data.json       # Файл данных питомцев
       └── cities_game_data.json # Файл данных игры в города
      ```
