@@ -205,7 +205,7 @@ def get_keyboard():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📊 Статус"), KeyboardButton(text="🗣️ Поговорить")],
-            [KeyboardButton(text="🏙️ Играть в города"), KeyboardButton(text="🤔 Абсурдные дебаты")],
+            [KeyboardButton(text="🏙️ Играть в города"), KeyboardButton(text="🤔 Филосовские вопросы")],
             [KeyboardButton(text="🔄 Новый питомец")]
         ],
         resize_keyboard=True
@@ -228,7 +228,7 @@ def get_pet_type_keyboard():
         inline_keyboard=[
             [InlineKeyboardButton(text="🐱 Котик", callback_data="type_cat")],
             [InlineKeyboardButton(text="🐶 Собачка", callback_data="type_dog")],
-            [InlineKeyboardButton(text="🐲 Дракончик", callback_data="type_dragon")]
+            [InlineKeyboardButton(text="🦜 Попуг", callback_data="type_parrot")]
         ]
     )
     return keyboard
@@ -281,7 +281,7 @@ def get_pet_status(user_id):
         return None
     update_pet_stats(user_id)
     pet = pets_data[str(user_id)]
-    emoji_map = {'cat': '🐱', 'dog': '🐶', 'dragon': '🐲'}
+    emoji_map = {'cat': '🐱', 'dog': '🐶', 'parrot': '🦜'}
     pet_emoji = emoji_map.get(pet['type'], '🐱')
     def make_bar(value):
         filled = '█' * (value // 10)
@@ -303,7 +303,7 @@ def get_pet_status(user_id):
         elif pet['type'] == 'dog':
             status += "🐕 Гав! Я очень рад!"
         else:
-            status += "🐲 Я могучий и довольный дракон!"
+            status += "🦜 Чирик! Я очень счастлив!"
     else:
         status += "😊 Все хорошо!"
     return status
@@ -315,16 +315,10 @@ def get_random_phrase(pet_type, action="talk"):
         phrases_list = PET_PHRASES[pet_type][action]
         if phrases_list:
             return random.choice(phrases_list)
-    default_phrases = {
-        'cat': {'talk': 'Мяу! 🐱', 'feed': 'Мурр! 😸', 'play': 'Мяф! 🎾', 'sleep': 'Zzz... 😴'},
-        'dog': {'talk': 'Гав! 🐶', 'feed': 'Ам-ам! 😋', 'play': 'Вуф! 🎾', 'sleep': 'Храп... 😴'},
-        'dragon': {'talk': 'Рррр! 🐲', 'feed': 'Хрум! 🔥', 'play': 'Грр! ⚔️', 'sleep': 'Zzz... 💤'}
-    }
-    return default_phrases.get(pet_type, {}).get(action, "...")
 
-# Получение случайного вопроса для дебатов
+# Получение случайного вопроса для "филосовских вопросов"
 def get_random_debate():
-    """Возвращает случайный вопрос для дебатов"""
+    """Возвращает случайный вопрос для 'филосовских вопросов'"""
     return random.choice(DEBATES)
 
 # Обработчик команды /start
@@ -348,7 +342,7 @@ async def choose_pet_type(callback: types.CallbackQuery):
         await callback.answer("У вас уже есть питомец!")
         return
     pet_type = callback.data.split("_")[1]
-    type_names = {"cat": "котика", "dog": "собачку", "dragon": "дракончика"}
+    type_names = {"cat": "котика", "dog": "собачку", "parrot": "попуга"}
     await callback.message.edit_text(
         f"Отлично! Вы выбрали {type_names[pet_type]} 🎉\n\n"
         f"Теперь введите имя для питомца:"
@@ -366,7 +360,7 @@ async def pet_action(callback: types.CallbackQuery):
         return
     update_pet_stats(user_id)
     pet = pets_data[str(user_id)]
-    emoji_map = {'cat': '🐱', 'dog': '🐶', 'dragon': '🐲'}
+    emoji_map = {'cat': '🐱', 'dog': '🐶', 'parrot': '🦜'}
     pet_emoji = emoji_map.get(pet['type'], '🐱')
     if action == "feed":
         pet['hunger'] = min(100, pet['hunger'] + 30)
@@ -402,17 +396,28 @@ async def talk_to_pet(message: types.Message):
         return
     update_pet_stats(user_id)
     pet = pets_data[str(user_id)]
+    emoji_map = {'cat': '🐱', 'dog': '🐶', 'parrot': '🦜'}
+    pet_emoji = emoji_map.get(pet['type'], '🐱')
+    if pet['energy'] < 10:
+        response = f"{pet_emoji} {pet['name']}: Я слишком устал для разговоров... 😴"
+        await message.answer(response)
+        return
+    if pet['hunger'] < 10:
+        response = f"{pet_emoji} {pet['name']}: Я голоден! 😖"
+        await message.answer(response)
+        return
     pet['energy'] = max(0, pet['energy'] - 3)
     pet['mood'] = min(100, pet['mood'] + 5)
+    pet['hunger'] = max(0, pet['hunger'] - 5)
     phrase = get_random_phrase(pet['type'], 'talk')
-    emoji_map = {'cat': '🐱', 'dog': '🐶', 'dragon': '🐲'}
+    emoji_map = {'cat': '🐱', 'dog': '🐶', 'parrot': '🦜'}
     pet_emoji = emoji_map.get(pet['type'], '🐱')
     pet['last_update'] = datetime.now().isoformat()
     save_data(pets_data)
     await message.answer(f"{pet_emoji} {pet['name']}: {phrase}")
 
-# Обработчик кнопки "Абсурдные дебаты"
-@dp.message(F.text == "🤔 Абсурдные дебаты")
+# Обработчик кнопки "Филосовские вопросы"
+@dp.message(F.text == "🤔 Филосовские вопросы")
 async def absurd_debates(message: types.Message):
     user_id = message.from_user.id
     if str(user_id) not in pets_data:
@@ -420,11 +425,20 @@ async def absurd_debates(message: types.Message):
         return
     update_pet_stats(user_id)
     pet = pets_data[str(user_id)]
+    emoji_map = {'cat': '🐱', 'dog': '🐶', 'parrot': '🦜'}
+    pet_emoji = emoji_map.get(pet['type'], '🐱')
+    if pet['energy'] < 10:
+        response = f"{pet_emoji} {pet['name']}: Я слишком устал для разговоров... 😴"
+        await message.answer(response)
+        return
+    if pet['hunger'] < 10:
+        response = f"{pet_emoji} {pet['name']}: Я голоден! 😖"
+        await message.answer(response)
+        return
     pet['energy'] = max(0, pet['energy'] - 8)
     pet['mood'] = min(100, pet['mood'] + 12)
+    pet['hunger'] = max(0, pet['hunger'] - 10)
     debate_question = get_random_debate()
-    emoji_map = {'cat': '🐱', 'dog': '🐶', 'dragon': '🐲'}
-    pet_emoji = emoji_map.get(pet['type'], '🐱')
     pet['last_update'] = datetime.now().isoformat()
     save_data(pets_data)
     await message.answer(
@@ -438,6 +452,17 @@ async def start_cities_game_handler(message: types.Message):
     user_id = message.from_user.id
     if str(user_id) not in pets_data:
         await message.answer("У вас нет питомца! Используйте /start")
+        return
+    pet = pets_data[str(user_id)]
+    emoji_map = {'cat': '🐱', 'dog': '🐶', 'parrot': '🦜'}
+    pet_emoji = emoji_map.get(pet['type'], '🐱')
+    if pet['energy'] < 10:
+        response = f"{pet_emoji} {pet['name']}: Я слишком устал для игр... 😴"
+        await message.answer(response)
+        return
+    if pet['hunger'] < 10:
+        response = f"{pet_emoji} {pet['name']}: Я голоден! 😖"
+        await message.answer(response)
         return
     if is_cities_game_active(user_id):
         await message.answer(
@@ -564,8 +589,8 @@ async def handle_text_messages(message: types.Message):
             await message.answer("Введите нормальное имя!")
             return
         create_pet(user_id, text.strip(), pet_type)
-        type_names = {"cat": "котик", "dog": "собачка", "dragon": "дракончик"}
-        emoji_map = {"cat": "🐱", "dog": "🐶", "dragon": "🐲"}
+        type_names = {"cat": "котик", "dog": "собачка", "parrot": "попуг"}
+        emoji_map = {"cat": "🐱", "dog": "🐶", "parrot": "🦜"}
         await message.answer(
             f"🎉 Поздравляю! Ваш {type_names[pet_type]} {emoji_map[pet_type]} {text} создан!\n\n"
             f"Все показатели: 100% ✨\n\n"
@@ -573,7 +598,7 @@ async def handle_text_messages(message: types.Message):
             f"🍖 Кормление - восстанавливает голод\n"
             f"🎮 Игра - поднимает настроение, но тратит энергию\n"
             f"💤 Сон - восстанавливает энергию\n"
-            f"🗣️ Общение и дебаты тоже влияют на питомца!",
+            f"🗣️ Общение и 'фиолосовские вопросы' тоже влияют на питомца!",
             reply_markup=get_keyboard()
         )
     else:
