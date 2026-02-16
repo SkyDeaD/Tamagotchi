@@ -21,6 +21,8 @@
 
 ## О боте
 
+![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+
 **Telegram-бот "Tamagotchi"** — это интерактивный бот для Telegram, который позволяет:
 - Создавать виртуального питомца (кот 🐱, собака 🐶 или попугай 🦜) и давать ему имя.
 - Следить за характеристиками питомца: голод (🍖), настроение (😊) и энергия (⚡).
